@@ -1,84 +1,120 @@
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 /**
- * Server code for the client/server project
- * Recieves request, reverses string, 
- * sends reversed string back
+ * Client side for our client
+ * server project. Sends a request
+ * with a string to reverse.
  * @author Carson Wood
+ *
  */
-public class Server implements Runnable
+public class Client
 {
-    //Our socket for the server
-    ServerSocket serverSocket;
-    //Input for the client socket
-    Scanner in;
-    //Output for the client socket
+    private static final int port = 4446;
+
+    private static final String host = "localhost";
+
+    //Output to server
     PrintWriter out;
-    //Client socket
-    Socket connection = null;
-    
+
+    //Input from server
+    Scanner conIn;
+
+    //Input from user
+    Scanner in;
+
+    String[] tenLetWords = { "Strawberry", "California", "Everything", "Technology", "Volleyball", "Homecoming", "Relaxation", "Television", "University", "Cinderella" };
+
     /**
-     * Main method to run server
+     * Creates a new instance of the client
      * @param args
+     * @throws UnknownHostException
+     * @throws IOException
      */
-    public static void main(String[] args)
+    public static void main(String[] args) throws UnknownHostException, IOException
     {
-        Server s = new Server();
-        s.run();
-    }
-    
-    /**
-     * Runs the server.
-     * TO-DO Break this bad boy up....
-     */
-    public void run()
-    {
-        try
-        {
-            serverSocket = new ServerSocket(4446); //Create server
-            System.out.println("Waiting for a connection...");
-            this.connection = serverSocket.accept(); //Accept connection
-            System.out.println("Connection recieved from " + connection.getInetAddress() + " on port " + connection.getLocalPort());
-            out = new PrintWriter(connection.getOutputStream()); //Gets output to connection
-            out.flush();
-            in = new Scanner(connection.getInputStream()); //Gets input to connection
-            out.println("S: Connected to server at " + serverSocket.getLocalPort());
-            out.flush();
-            while(connection.isConnected()) //Process all client requests until it closes the connection
-            {
-                System.out.println("Waiting for response...");
-                String msg = in.nextLine();
-                System.out.println("Message recieved! Reversing now.");
-                String rMsg = reverse(msg);
-                System.out.println("Returning message...");
-                out.println("S: Your message was: " + msg + " and it is now " + rMsg);
-                out.flush();
-            }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Simple string reversal
-     * @param s
-     * @return
-     */
-    public String reverse(String s)
-    {
-        String revS = "";
-        
-        for(int i = s.length() - 1; i >= 0; i--)
-        {
-            revS = revS + s.charAt(i);
-        }
-        return revS;
+        Client c = new Client();
+        c.run();
     }
 
+    /**
+     * Runs the client
+     * TO-DO BREAK IT UP
+     * 
+     * @throws UnknownHostException
+     * @throws IOException
+     */
+    public void run() throws UnknownHostException, IOException
+    {
+        String choice; //To advance client and send next string
+        String msg; //Recieve messages from server
+
+        //Opens connection
+        Socket connection = openConnection();
+
+        //Gets I/O streams from server
+        out = new PrintWriter(connection.getOutputStream());
+        conIn = new Scanner(connection.getInputStream());
+        msg = conIn.nextLine();
+        System.out.println(msg);
+        in = new Scanner(System.in);
+
+        /*
+         * Loops through strings to reverse
+         */
+        for (String s : tenLetWords)
+        {
+            send(s);
+            System.out.println("Press 1 to continue to next string...");
+            choice = in.next();
+            while (!choice.equals("1"))
+            {
+                choice = in.next();
+            }
+
+        }
+        closeConnection(connection); //Closes the connection
+    }
+
+    /**
+     * Open the connection
+     * @return
+     * @throws UnknownHostException
+     * @throws IOException
+     */
+    private Socket openConnection() throws UnknownHostException, IOException
+    {
+        System.out.println("Connecting to server...");
+        Socket connection = new Socket(host, port); //Connects to server
+        return connection;
+    }
+
+    /**
+     * Closes the connection
+     * @param connection
+     * @throws IOException
+     */
+    private void closeConnection(Socket connection) throws IOException
+    {
+        System.out.println("Closing connection...");
+        connection.close();
+    }
+
+    /**
+     * Sends a message to the server
+     * with the string to reverse.
+     * @param s
+     */
+    private void send(String s)
+    {
+        System.out.println("You sent " + s + ", sending message...");
+        out.println(s);
+        out.flush();
+        String msg = conIn.nextLine();
+        System.out.println(msg);
+        out.flush();
+    }
 }
