@@ -10,98 +10,81 @@ import java.util.Scanner;
  * sends reversed string back
  * @author Carson Wood
  */
-public class Server implements Runnable
+public class Server
 {
-    //Our socket for the server
+    //Socket for the server
     static ServerSocket serverSocket = null;
-    //Input for the client socket
-    static Scanner in = null;
-    //Output for the client socket
-    static PrintWriter out = null;
-    //Client socket
-    static Socket connection = null;
-    
-    /**
-     * Constructor for starting a new thread/server.
-     * @param c
-     * @param i
-     * @param o
-     * @param s
-     */
-    Server(Socket c, Scanner i, PrintWriter o, ServerSocket s){
-        connection = c;
-        serverSocket = s;
-        in = i;
-        out = o;
-    }
-    
+
     /**
      * Main method to run server when the file
      * is first runned.
      * @param args
+     * @throws IOException 
      */
-    public static void main(String[] args)
-    {
-        Server s = new Server(connection, in, out, serverSocket);
-        try
-        {
-            s.startServer();
-        }
-        catch (IOException e)
-        {
-            System.out.println(e);
-        }
-    }
-    
-    private void startServer() throws IOException
+    public static void main(String[] args) throws IOException
     {
         serverSocket = new ServerSocket(4446); //Create server
         System.out.println("Waiting for a connection...");
-        while(true){
+        while (true)
+        {
             Socket incomingConnection = serverSocket.accept(); //Accept connection
-            System.out.println("Connection recieved from " + incomingConnection.getInetAddress() + 
-                    " on port " + incomingConnection.getLocalPort());
-            out = new PrintWriter(incomingConnection.getOutputStream()); //Gets output to connection
-            out.flush();
-            in = new Scanner(incomingConnection.getInputStream()); //Gets input to connection
+            System.out.println("Connection recieved from " + incomingConnection.getInetAddress() + " on port " + incomingConnection.getLocalPort());
+            ClientListener c = new ClientListener(incomingConnection); //Creates new client listener
+            c.start(); //Starts the client listener thread
+        }
+
+    }
+
+    /**
+     * A new thread that listens to each
+     * client and processes it's requests.
+     * @author carson
+     *
+     */
+    static class ClientListener extends Thread
+    {
+        Socket connection; //Client socket
+        Scanner in; //Client input stream
+        PrintWriter out; //Client output stream
+        ClientListener(Socket c) throws IOException{
+            connection = c;
+            in = new Scanner(c.getInputStream());
+            out = new PrintWriter(c.getOutputStream());  
+        }
+        
+        /**
+         * Runs the thread task
+         */
+        public void run()
+        {
             out.println("S: Connected to server at " + serverSocket.getLocalPort());
             out.flush();
-            new Thread(new Server(incomingConnection, in, out, serverSocket)).start();
+            while (connection.isConnected()) //Process all client requests until it closes the connection
+            {
+                System.out.println("Waiting for response...");
+                String msg = in.nextLine();
+                System.out.println("Message recieved! Reversing now.");
+                String rMsg = reverse(msg);
+                System.out.println("Returning message...");
+                out.println("S: Your message was: " + msg + " and it is now " + rMsg);
+                out.flush();
+            }
         }
-    }
 
-    /**
-     * Starts a new thread for each
-     * new 
-     */
-    public void run()
-    {
-        while(connection.isConnected()) //Process all client requests until it closes the connection
+        /**
+         * Simple string reversal
+         * @param s
+         * @return
+         */
+        public String reverse(String s)
         {
-            System.out.println("Waiting for response...");
-            String msg = in.nextLine();
-            System.out.println("Message recieved! Reversing now.");
-            String rMsg = reverse(msg);
-            System.out.println("Returning message...");
-            out.println("S: Your message was: " + msg + " and it is now " + rMsg);
-            out.flush();
-        }
-    }
-    
-    /**
-     * Simple string reversal
-     * @param s
-     * @return
-     */
-    public String reverse(String s)
-    {
-        String revS = "";
-        
-        for(int i = s.length() - 1; i >= 0; i--)
-        {
-            revS = revS + s.charAt(i);
-        }
-        return revS;
-    }
+            String revS = "";
 
+            for (int i = s.length() - 1; i >= 0; i--)
+            {
+                revS = revS + s.charAt(i);
+            }
+            return revS;
+        }
+    }
 }
