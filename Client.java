@@ -33,8 +33,9 @@ public class Client
      * @param args
      * @throws UnknownHostException
      * @throws IOException
+     * @throws InterruptedException
      */
-    public static void main(String[] args) throws UnknownHostException, IOException
+    public static void main(String[] args) throws UnknownHostException, IOException, InterruptedException
     {
         Client c = new Client();
         c.run();
@@ -43,11 +44,12 @@ public class Client
     /**
      * Runs the client
      * TO-DO BREAK IT UP
-     * 
+     *
      * @throws UnknownHostException
      * @throws IOException
+     * @throws InterruptedException
      */
-    public void run() throws UnknownHostException, IOException
+    public void run() throws UnknownHostException, IOException, InterruptedException
     {
         String choice; //To advance client and send next string
         String msg; //Recieve messages from server
@@ -70,12 +72,13 @@ public class Client
         for (String s : tenLetWords)
         {
             send(s);
-            System.out.println("Press 1 to continue to next string...");
-            choice = in.next();
-            while (!choice.equals("1"))
-            {
-                choice = in.next();
-            }
+            Thread.sleep(4000);
+//            System.out.println("Press 1 to continue to next string...");
+//            choice = in.next();
+//            while (!choice.equals("1"))
+//            {
+//                choice = in.next();
+//            }
         }
         closeConnection(connection); //Closes the connection
     }
