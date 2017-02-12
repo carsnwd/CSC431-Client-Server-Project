@@ -56,7 +56,9 @@ public class Client
         Socket connection = openConnection();
 
         //Gets I/O streams from server
+        System.out.println("Getting output stream...");
         out = new PrintWriter(connection.getOutputStream());
+        System.out.println("Getting input stream...");
         conIn = new Scanner(connection.getInputStream());
         msg = conIn.nextLine();
         System.out.println(msg);
@@ -74,7 +76,6 @@ public class Client
             {
                 choice = in.next();
             }
-
         }
         closeConnection(connection); //Closes the connection
     }
@@ -89,6 +90,7 @@ public class Client
     {
         System.out.println("Connecting to server...");
         Socket connection = new Socket(host, port); //Connects to server
+        System.out.println("Connection made!");
         return connection;
     }
 
